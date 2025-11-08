@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My Profile - EventEase+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fadeIn">
+      <h1 class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+        My Profile
+      </h1>
+    </div>
+
+    {% if profile %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Profile Card -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-xl p-8 animate-slideUp">
+          <div class="text-center">
+            {% if profile.avatar %}
+              <img src="{{ profile.avatar.url }}" alt="{{ user.get_full_name|default:user.username }}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-blue-200 shadow-lg">
+            {% else %}
+              <div class="w-32 h-32 rounded-full mx-auto mb-4 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-4 border-blue-200 shadow-lg">
+                <span class="text-5xl font-bold text-white">{{ user.first_name.0|default:user.username.0|upper }}</span>
+              </div>
+            {% endif %}
+            
+            <h2 class="text-2xl font-bold text-gray-900 mb-1">{{ user.get_full_name|default:user.username }}</h2>
+            <p class="text-gray-600 mb-2">@{{ user.username }}</p>
+            
+            <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+              {% if user.is_superuser %}
+              <span class="inline-block px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-300">
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                Super Admin
+              </span>
+              {% endif %}
+              
+              <span class="inline-block px-3 py-1 rounded-full text-sm font-medium {% if profile.role == 'ADMIN' %}bg-purple-100 text-purple-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                {% if profile.role == 'ADMIN' %}
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                {% endif %}
+                {{ profile.get_role_display }}
+              </span>
+            </div>
+            
+            {% if profile.course %}
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <p class="text-sm text-gray-600">Course: <span class="font-semibold text-gray-900">{{ profile.course }}</span></p>
+              {% if profile.year_level %}
+              <p class="text-sm text-gray-600 mt-1">Year Level: <span class="font-semibold text-gray-900">{{ profile.year_level }}</span></p>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Points Summary -->
+        <div class="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 mt-6 text-white animate-slideUp delay-200">
+          <h3 class="text-xl font-bold mb-4">Points</h3>
+          <div class="text-center">
+            <p class="text-5xl font-extrabold mb-2">{{ profile.total_points|intcomma }}</p>
+            <p class="text-indigo-200">Total Points</p>
+          </div>
+          
+          <div class="mt-6 pt-6 border-t border-white/20 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-2xl font-bold">{{ attended_count }}</p>
+              <p class="text-sm text-indigo-200">Events Attended</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold">{{ total_registrations }}</p>
+              <p class="text-sm text-indigo-200">Registrations</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Points Transactions -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 animate-slideUp delay-300">
+          <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+            Points History
+          </h3>
+          
+          {% if points_transactions %}
+          <div class="space-y-3 max-h-96 overflow-y-auto">
+            {% for transaction in points_transactions %}
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div class="flex-1">
+                <p class="font-semibold text-gray-900">{{ transaction.reason|default:"Points Awarded" }}</p>
+                {% if transaction.event %}
+                <p class="text-sm text-gray-600">{{ transaction.event.title }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">{{ transaction.timestamp|date:"M d, Y g:i A" }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-lg font-bold {% if transaction.amount >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                  {% if transaction.amount >= 0 %}+{% endif %}{{ transaction.amount|intcomma }}
+                </p>
+                <p class="text-xs text-gray-500">Balance: {{ transaction.balance_after|intcomma }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="text-gray-600 text-center py-8">No points transactions yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- Upcoming Registrations -->
+        {% if upcoming_registrations %}
+        <div class="bg-white rounded-2xl shadow-xl p-8 animate-slideUp delay-400">
+          <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Upcoming Events
+          </h3>
+          
+          <div class="space-y-4">
+            {% for registration in upcoming_registrations %}
+            <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <a href="{% url 'event-detail' registration.event.pk %}" class="text-lg font-semibold text-gray-900 hover:text-blue-600">
+                    {{ registration.event.title }}
+                  </a>
+                  <p class="text-sm text-gray-600 mt-1">{{ registration.event.start_datetime|date:"F d, Y g:i A" }}</p>
+                  <span class="inline-block mt-2 px-2 py-1 text-xs font-medium rounded-full 
+                    {% if registration.status == 'PRE' %}bg-blue-100 text-blue-800
+                    {% elif registration.status == 'CONFIRMED' %}bg-green-100 text-green-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ registration.get_status_display }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <div class="mt-6 text-center">
+            <a href="{% url 'my-registrations' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+              View all registrations →
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+      <p class="text-gray-600">Profile not found.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+  .animate-slideUp { animation: slideUp 0.6s ease-out forwards; opacity: 0; }
+  .delay-200 { animation-delay: 0.2s; }
+  .delay-300 { animation-delay: 0.3s; }
+  .delay-400 { animation-delay: 0.4s; }
+</style>
+{% endblock %}
+
